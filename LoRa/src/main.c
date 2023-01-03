@@ -24,7 +24,7 @@ void main(void)
 	int ret;
 	int i;
 
-	printk("LoRa Example\n");
+	printk("LoRa Point to Point Communications Example\n");
 
 	lora_dev = DEVICE_DT_GET(DT_ALIAS(lora0));
 	if (!device_is_ready(lora_dev)) {
@@ -57,7 +57,7 @@ void main(void)
 #ifdef TRANSMIT
 
 	while (1) {
-        
+
 		ret = lora_send(lora_dev, data_tx, sizeof(data_tx));
 		if (ret < 0) {
 			LOG_ERR("LoRa send failed");
