@@ -57,14 +57,14 @@ void main(void)
 
 	printk("Zephyr LoRaWAN Node Example\n");
 
-  	printk("Opening I2C...\n");
+	printk("Opening I2C...\n");
 	i2c_dev = DEVICE_DT_GET(DT_ALIAS(sensorbus));
-  	if (!i2c_dev) {
+	if (!i2c_dev) {
 		printk("I2C: Device driver not found.\n");
 		return;
-  	} else {
-        //i2c_configure(i2c_dev, I2C_SPEED_SET(I2C_SPEED_STANDARD));
-  	}
+	} else {
+		//i2c_configure(i2c_dev, I2C_SPEED_SET(I2C_SPEED_STANDARD));
+	}
 
 	lora_dev = DEVICE_DT_GET(DT_ALIAS(lora0));
 	if (!device_is_ready(lora_dev)) {
@@ -72,24 +72,24 @@ void main(void)
 		return;
 	}
 
-    printk("Starting LoRaWAN stack...\n");
+	printk("Starting LoRaWAN stack...\n");
 	ret = lorawan_start();
 	if (ret < 0) {
 		printk("lorawan_start failed: %d\n\n", ret);
 		return;
 	}
 
-    // Enable callbacks
-    struct lorawan_downlink_cb downlink_cb = {
-        .port = LW_RECV_PORT_ANY,
-        .cb = dl_callback
-    };
+	// Enable callbacks
+	struct lorawan_downlink_cb downlink_cb = {
+		.port = LW_RECV_PORT_ANY,
+		.cb = dl_callback
+	};
 
 	lorawan_register_downlink_callback(&downlink_cb);
 	lorawan_register_dr_changed_callback(lorwan_datarate_changed);
 
 	uint32_t random = sys_rand32_get();
-    uint16_t dev_nonce = random & 0x0000FFFF;
+	uint16_t dev_nonce = random & 0x0000FFFF;
 
 	join_cfg.mode = LORAWAN_ACT_OTAA;
 	join_cfg.dev_eui = dev_eui;
@@ -107,7 +107,7 @@ void main(void)
 			printk("Join failed (%d)\n", ret);
 
 			random = sys_rand32_get();
-    		join_cfg.otaa.dev_nonce = random & 0x0000FFFF;
+			join_cfg.otaa.dev_nonce = random & 0x0000FFFF;
 
 			k_sleep(K_MSEC(5000));
 		} else {
