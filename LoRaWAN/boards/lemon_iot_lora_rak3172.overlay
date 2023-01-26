@@ -1,0 +1,25 @@
+// DeviceTree overlay for Lemon IoT LoRa RAK3172
+// SPDX-License-Identifier: Apache-2.0
+
+/ {
+	aliases {
+		sensorbus = &i2c2;
+	};
+};
+
+&i2c2 {
+	pinctrl-0 = <&i2c2_scl_pa12 &i2c2_sda_pa11>;
+	pinctrl-names = "default";
+	status = "okay";
+	clock-frequency = <100000>;
+	shtcx@70 {
+		compatible = "sensirion,shtcx";
+		reg = <0x70>;
+		chip = "shtc3";
+		measure-mode = "normal";
+	};
+	bme680@76 {
+		compatible = "bosch,bme680";
+		reg = <0x76>;
+	};
+};
