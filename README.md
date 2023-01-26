@@ -11,6 +11,8 @@ Code to allow testing of LoRa radios. When started, will listen for packets. Whe
 
 Useful for validating your LoRa radio is working before trying LoRaWAN.
 
+Please check the frequency configuration prior to use and ensure you are transmitting on a permitted band for your country. 
+
 ```
 *** Booting Zephyr OS build zephyr-v3.2.0-3920-g5787c69b9ce5 ***
 LoRa Point to Point Communications Example
