@@ -11,7 +11,7 @@ Tested with the following targets:
 
 # LoRaWAN
 
-The LoRaWAN folder contains example code to connect to [The Things Network](https://www.thethingsnetwork.org) and transmit temperature and humdity values from a Sensirion SHTC3.
+The LoRaWAN folder contains example code to connect to [The Things Network](https://www.thethingsnetwork.org) and transmit temperature and humidity values from a Sensirion SHTC3.
 
 LoRaWAN Device EUI, Join EUI and Application Key should be entered into the lorawan.h file prior to compiling. 
 
