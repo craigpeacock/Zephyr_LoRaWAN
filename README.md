@@ -1,4 +1,4 @@
-# Zephyr_LoRaWAN
+# Zephyr LoRaWAN & LoRa Examples
 
 An example LoRa Point to Point and LoRaWAN Network Application for the Zephyr RTOS.
 
