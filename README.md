@@ -38,6 +38,20 @@ The example stores the DevNonce in NVS (Non-volatile Storage) as per LoRaWAN 1.0
 
 The STM32WL5E has an IEEE 64-bit EUI stored at 0x1FFF7580. We can read this and use it as the Device EUI. Currently the LoRaWAN Device EUI is hard-coded.
 
+## Example output
+
+```
+*** Booting Zephyr OS build zephyr-v3.2.0-3920-g5787c69b9ce5 ***
+Zephyr LoRaWAN Node Example
+Board: lemon_iot_lora_rak3172
+NVS: ID 1, DevNonce: 8
+Starting LoRaWAN stack.
+Joining network using OTAA, dev nonce 8, attempt 1: Timed-out waiting for response.
+Joining network using OTAA, dev nonce 9, attempt 2: Join successful.
+Sending Temp 27.77 RH 50.1
+Sending Temp 27.47 RH 51.2
+```
+
 # LoRa
 
 The LoRa folder contains example code to allow testing of LoRa radios (point to point communications). This is useful for validating your LoRa radio is working correctly before trying to connect to LoRaWAN networks.
