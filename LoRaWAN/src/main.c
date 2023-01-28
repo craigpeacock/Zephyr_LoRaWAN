@@ -55,9 +55,8 @@ void main(void)
 
 	int ret;
 
-	printk("Zephyr LoRaWAN Node Example\n");
+	printk("Zephyr LoRaWAN Node Example\nBoard: %s\n", CONFIG_BOARD);
 
-	printk("Opening I2C...\n");
 	i2c_dev = DEVICE_DT_GET(DT_ALIAS(sensorbus));
 	if (!i2c_dev) {
 		printk("I2C: Device driver not found.\n");
@@ -98,20 +97,24 @@ void main(void)
 	join_cfg.otaa.nwk_key = app_key;
 	join_cfg.otaa.dev_nonce = dev_nonce;
 
-	int i = 0;
+	int i = 1;
 
 	do {
-		printk("Joining network over OTAA (%d)\n",i++);
+		printk("Joining network using OTAA, attempt %d: ",i++);
 		ret = lorawan_join(&join_cfg);
 		if (ret < 0) {
-			printk("Join failed (%d)\n", ret);
+			if ((ret =-ETIMEDOUT)) {
+				printf("Timed-out waiting for response.\n");
+			} else {
+				printk("Join failed (%d)\n", ret);
+			}
 
 			random = sys_rand32_get();
 			join_cfg.otaa.dev_nonce = random & 0x0000FFFF;
 
 			k_sleep(K_MSEC(5000));
 		} else {
-			printk("Join successful (%d)\n",ret);
+			printk("Join successful.\n");
 		}
 		
 	} while (ret != 0);
@@ -122,7 +125,7 @@ void main(void)
 		k_msleep(1);
 		shtc3_GetTempAndHumidity(i2c_dev, &payload[0], &payload[1]);
 		shtc3_sleep(i2c_dev);
-		printk("Temp %.02f RH %.01f\r\n", shtc3_convert_temp(payload[0]), shtc3_convert_humd(payload[1])); 
+		printk("Sending Temp %.02f RH %.01f\r\n", shtc3_convert_temp(payload[0]), shtc3_convert_humd(payload[1])); 
 	
 		ret = lorawan_send(2, (uint8_t *)&payload, sizeof(payload), LORAWAN_MSG_UNCONFIRMED);
 		if (ret == -EAGAIN) {
