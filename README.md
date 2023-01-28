@@ -32,9 +32,9 @@ LORAMAC_REGION_AU915=y
 
 The I2C SHTC3 sensor can be connected to the I2C pins allocated in the relevent [board](https://github.com/craigpeacock/Zephyr_LoRaWAN/tree/main/LoRaWAN/boards) file for your target. 
 
-## Work in progress
+The example stores the DevNonce in NVS (Non-volatile Storage) as per LoRaWAN 1.0.4 Specifications.
 
-This example doesn't use NVM to store the DevNonce as per LoRaWAN 1.0.4 Specifications, 6.2.5 Join-Request Frame. The DevNonce should be a counter set to 0 and incremented with every Join-Request, regardless of power cycle. At present, we hack this using a random number generator. 
+## Work in progress
 
 The STM32WL5E has an IEEE 64-bit EUI stored at 0x1FFF7580. We can read this and use it as the Device EUI. Currently the LoRaWAN Device EUI is hard-coded.
 

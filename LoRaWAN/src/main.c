@@ -14,12 +14,23 @@
 #include <zephyr/kernel.h>
 #include <zephyr/lorawan/lorawan.h>
 #include <zephyr/drivers/i2c.h>
-#include <zephyr/random/rand32.h>
+
+#include <zephyr/drivers/flash.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/fs/nvs.h>
 
 #include "shtc3.h"
 #include "lorawan.h"
 
 #define DELAY K_MINUTES(10)
+#define NVS_PARTITION			storage_partition
+#define NVS_PARTITION_DEVICE	FIXED_PARTITION_DEVICE(NVS_PARTITION)
+#define NVS_PARTITION_OFFSET	FIXED_PARTITION_OFFSET(NVS_PARTITION)
+
+#define NVS_DEVNONCE_ID 1
+
+// Set NVS_CLEAR to wipe NVS partition on boot.
+//#define NVS_CLEAR
 
 #define LOG_LEVEL CONFIG_LOG_DBG_LEVEL
 #include <zephyr/logging/log.h>
@@ -54,8 +65,56 @@ void main(void)
 	uint16_t payload[2];
 
 	int ret;
+	static struct nvs_fs fs;
+	struct flash_pages_info info;
+	ssize_t bytes_written;
+
+	uint16_t dev_nonce = 0;
 
 	printk("Zephyr LoRaWAN Node Example\nBoard: %s\n", CONFIG_BOARD);
+
+	fs.flash_device = NVS_PARTITION_DEVICE;
+	if (!device_is_ready(fs.flash_device)) {
+		printk("Flash device %s is not ready\n", fs.flash_device->name);
+		return;
+	}
+	fs.offset = NVS_PARTITION_OFFSET;
+	ret = flash_get_page_info_by_offs(fs.flash_device, fs.offset, &info);
+	if (ret) {
+		printk("Unable to get page info\n");
+		return;
+	}
+	fs.sector_size = info.size;
+	fs.sector_count = 3U;
+
+	ret = nvs_mount(&fs);
+	if (ret) {
+		printk("Flash Init failed\n");
+		return;
+	}
+
+#if NVS_CLEAR
+	ret = nvs_clear(&fs);
+	if (ret) {
+		printk("Flash Clear failed\n");
+		return;
+	} else {
+		printk("Cleared NVS from flash\n");
+	}
+#endif
+
+	ret = nvs_read(&fs, NVS_DEVNONCE_ID, &dev_nonce, sizeof(dev_nonce));
+	if (ret > 0) { /* item was found, show it */
+		printk("NVS: ID %d, DevNonce: %d\n", NVS_DEVNONCE_ID, dev_nonce);
+	} else   {/* item was not found, add it */
+		printk("NVS: No DevNonce found, resetting to %d\n", dev_nonce);
+		bytes_written = nvs_write(&fs, NVS_DEVNONCE_ID, &dev_nonce, sizeof(dev_nonce));
+		if (bytes_written < 0) {
+			printf("NVS: Failed to write id %d (%d)\n", NVS_DEVNONCE_ID, bytes_written);
+		} else {
+			printf("NVS: Wrote %d bytes to id %d\n",bytes_written, NVS_DEVNONCE_ID);
+		}
+	}
 
 	i2c_dev = DEVICE_DT_GET(DT_ALIAS(sensorbus));
 	if (!i2c_dev) {
@@ -71,7 +130,7 @@ void main(void)
 		return;
 	}
 
-	printk("Starting LoRaWAN stack...\n");
+	printk("Starting LoRaWAN stack.\n");
 	ret = lorawan_start();
 	if (ret < 0) {
 		printk("lorawan_start failed: %d\n\n", ret);
@@ -87,9 +146,6 @@ void main(void)
 	lorawan_register_downlink_callback(&downlink_cb);
 	lorawan_register_dr_changed_callback(lorwan_datarate_changed);
 
-	uint32_t random = sys_rand32_get();
-	uint16_t dev_nonce = random & 0x0000FFFF;
-
 	join_cfg.mode = LORAWAN_ACT_OTAA;
 	join_cfg.dev_eui = dev_eui;
 	join_cfg.otaa.join_eui = join_eui;
@@ -100,7 +156,7 @@ void main(void)
 	int i = 1;
 
 	do {
-		printk("Joining network using OTAA, attempt %d: ",i++);
+		printk("Joining network using OTAA, dev nonce %d, attempt %d: ", dev_nonce, i++);
 		ret = lorawan_join(&join_cfg);
 		if (ret < 0) {
 			if ((ret =-ETIMEDOUT)) {
@@ -108,15 +164,25 @@ void main(void)
 			} else {
 				printk("Join failed (%d)\n", ret);
 			}
-
-			random = sys_rand32_get();
-			join_cfg.otaa.dev_nonce = random & 0x0000FFFF;
-
-			k_sleep(K_MSEC(5000));
 		} else {
 			printk("Join successful.\n");
 		}
-		
+
+		// Increment DevNonce as per LoRaWAN 1.0.4 Spec.
+		dev_nonce++;
+		// Save value away in Non-Volatile Storage.
+		bytes_written = nvs_write(&fs, NVS_DEVNONCE_ID, &dev_nonce, sizeof(dev_nonce));
+		if (bytes_written < 0) {
+			printf("NVS: Failed to write id %d (%d)\n", NVS_DEVNONCE_ID, bytes_written);
+		} else {
+			//printf("NVS: Wrote %d bytes to id %d\n",bytes_written, NVS_DEVNONCE_ID);
+		}
+
+		if (ret < 0) {
+			// If failed, wait before re-trying.
+			k_sleep(K_MSEC(5000));
+		}
+
 	} while (ret != 0);
 
 	while (1) {
