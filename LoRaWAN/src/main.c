@@ -135,6 +135,7 @@ void main(void)
 
 		// Increment DevNonce as per LoRaWAN 1.0.4 Spec.
 		dev_nonce++;
+		join_cfg.otaa.dev_nonce = dev_nonce;
 		// Save value away in Non-Volatile Storage.
 		bytes_written = nvs_write(&fs, NVS_DEVNONCE_ID, &dev_nonce, sizeof(dev_nonce));
 		if (bytes_written < 0) {
