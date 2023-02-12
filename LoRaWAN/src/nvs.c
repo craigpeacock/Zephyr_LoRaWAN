@@ -7,9 +7,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/random/rand32.h>
+#include <zephyr/console/console.h>
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/fs/nvs.h>
@@ -20,7 +22,7 @@
 //#define NVS_CLEAR
 
 const int nVars = 4;
-const char *nvs_name[] = {"DevNonce", "DevEUI  ", "JoinEUI ", "AppKey  "};
+const char *nvs_name[] = {"DevNonce", "DevEUI", "JoinEUI", "AppKey"};
 int nvs_len[] = {2, 8, 8, 16};
 
 void stm32wl_ieee_64uid(uint8_t dev_eui[])
@@ -35,6 +37,46 @@ void stm32wl_ieee_64uid(uint8_t dev_eui[])
 	strncpy(dev_eui_str, (char *)uid, 8);
 	for (int i = 0; i < 8; i++)
 		dev_eui[i] = dev_eui_str[7-i];
+}
+
+uint8_t parse_str(uint8_t *string, uint8_t **fields, uint8_t max_fields)
+{
+	uint8_t i = 0;
+
+	if (*string == 0) 
+		return 0;
+	
+	fields[i++] = string;
+
+	while((*string != 0) && (i <= max_fields)) {
+		if (*string == ' ') {
+			*string = '\0';		
+			fields[i++] = string + 1;
+		}
+		string++;
+	}
+
+	return(i);
+}
+
+void console_read_key(void *data, uint8_t len)
+{
+	uint8_t *key = (void *)data;
+	uint8_t *buf;	
+	uint16_t ret;
+
+	console_getline_init();
+	
+	buf = console_getline();
+	
+	uint8_t *ptrhex[len];
+
+	ret = parse_str(buf, ptrhex, len);
+	//printk("Parsed %d values\n", ret);
+
+	for (int i = 0; i < ret; i++) {
+		key[i] = (strtol(ptrhex[i], NULL, 16) & 0xFF);
+	}		
 }
 
 void nvs_initialise(struct nvs_fs *fs)
@@ -70,7 +112,6 @@ void nvs_initialise(struct nvs_fs *fs)
 	} else {
 		printk("Cleared NVS from flash\n");
 	}
-    while(1);
 #endif
 }
 
@@ -82,13 +123,13 @@ void nvs_read_init_parameter(struct nvs_fs *fs, uint16_t id, void *data)
 	char *array = (void *)data;
 	int *devnonce = (void *)data;
 
-	printk("NVS: ID %d %s ", id, nvs_name[id]);
+	printk("NVS ID %d %s: ", id, nvs_name[id]);
 	ret = nvs_read(fs, id, data, nvs_len[id]);
 	if (ret > 0) { 
 		// Item found, print output:
 		switch (id) {
 			case NVS_DEVNONCE_ID:
-				printk("%d\n",*devnonce);
+				printk("%d\n", (uint16_t)*devnonce);
 				break;
 			case NVS_LORAWAN_DEV_EUI_ID:
 			case NVS_LORAWAN_JOIN_EUI_ID:
@@ -102,12 +143,12 @@ void nvs_read_init_parameter(struct nvs_fs *fs, uint16_t id, void *data)
 		}
 	} else {
 		// Item not found
-		printk("not found. Initialised to ");
+		printk("Not found.\n");
 
 		switch (id) {
 			case NVS_DEVNONCE_ID:
 				*devnonce = 0;
-				printk("%d ",*devnonce);
+				printk("Initialised to %d.\n",*devnonce);
 				break;
 
 			case NVS_LORAWAN_DEV_EUI_ID:
@@ -115,36 +156,51 @@ void nvs_read_init_parameter(struct nvs_fs *fs, uint16_t id, void *data)
 #ifdef CONFIG_SOC_STM32WLE5XX
 				// Get IEEE 64-bit UID from STM
 				stm32wl_ieee_64uid(data);
-#endif
-
+				printk("Initialised to STM32 64-bit Dev EUI");	
 				for (int i = 0; i < nvs_len[id]; i++)
-					printk("%02X ",array[i]);
+					printk(" %02X",array[i]);
+				printk(".\n");
+#else
+				printk("Enter Dev EUI: ");
+				console_read_key(data, 8);
+				printk("\n");				
+#endif
 				break;
 
 			case NVS_LORAWAN_JOIN_EUI_ID:
 				// Initialise to zero.
+				// for (int i = 0; i < nvs_len[id]; i++) {
+				//	array[i] = 0;
+				// }					
+				printk("Enter Join EUI: ");
+				console_read_key(data, 8);
+				printk("Setting to");
 				for (int i = 0; i < nvs_len[id]; i++) {
-					array[i] = 0;
-					printk("%02X ",array[i]);
-				}					
+					printk(" %02X",array[i]);
+				}	
+				printk(".\n");
 				break;
 
 			case NVS_LORAWAN_APP_KEY_ID:
 				// Generate random key
-                sys_rand_get(data, nvs_len[id]);
+                // sys_rand_get(data, nvs_len[id]);
+				printk("Enter App Key: ");
+				console_read_key(data, 16);
+				printk("Setting to");
 				for (int i = 0; i < nvs_len[id]; i++) {
-					printk("%02X ",array[i]);
+					printk(" %02X",array[i]);
 				}	
+				printk(".\n");
 				break;
 		}
 
 		// Write to NVS
 		bytes_written = nvs_write(fs, id, data, nvs_len[id]);
 		if (bytes_written < 0) {
-			printf("Failed (%d)\n",bytes_written);
+			printf("Failed (%d).\n",bytes_written);
 		} else {
 			//printf("Saved %d bytes\n",bytes_written);
-            printf("Saved\n");
+            printf("Saved.\n");
 		}
 	}
 }

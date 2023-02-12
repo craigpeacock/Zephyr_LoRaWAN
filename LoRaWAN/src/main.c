@@ -121,7 +121,7 @@ void main(void)
 	int i = 1;
 
 	do {
-		printk("Joining network using OTAA, dev nonce %d, attempt %d: ", dev_nonce, i++);
+		printk("Joining network using OTAA, dev nonce %d, attempt %d: ", join_cfg.otaa.dev_nonce, i++);
 		ret = lorawan_join(&join_cfg);
 		if (ret < 0) {
 			if ((ret =-ETIMEDOUT)) {
@@ -155,7 +155,11 @@ void main(void)
 
 		shtc3_wakeup(i2c_dev);
 		k_msleep(1);
-		shtc3_GetTempAndHumidity(i2c_dev, &payload[0], &payload[1]);
+		ret = shtc3_GetTempAndHumidity(i2c_dev, &payload[0], &payload[1]);
+		if (ret != SHTC3_NO_ERROR) {
+			payload[0] = 0x0000;
+			payload[1] = 0x0000;
+		}
 		shtc3_sleep(i2c_dev);
 		printk("Sending Temp %.02f RH %.01f\r\n", shtc3_convert_temp(payload[0]), shtc3_convert_humd(payload[1])); 
 	
