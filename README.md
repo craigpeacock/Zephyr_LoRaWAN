@@ -4,10 +4,10 @@ An example LoRa Point to Point and LoRaWAN Network Application for the Zephyr RT
 
 Tested with the following targets:
 
-* Lemon IoT BLE nRF52832 + RFM95W (SX1276) 
-* Nordic nRF52840 Dongle + RFM95W (SX1276) 
-* Lemon IoT LTE nRF9160 + RFM95W (SX1276) 
-* Lemon IoT LoRa RAK3172 (based on the STM32WL5ECC)
+* [Lemon IoT LoRa RAK3172](https://lemon-iot.com/index.php/product/lemon-iot-lorawan-rak3172-board/) (based on the STM32WL5ECC)
+* [Lemon IoT BLE nRF52832](https://lemon-iot.com/index.php/product/lemon-iot-ble-nrf52832/) + RFM95W (SX1276) 
+* [Nordic nRF52840 Dongle](https://www.nordicsemi.com/Products/Development-hardware/nrf52840-dongle) + RFM95W (SX1276) 
+* [Lemon IoT LTE nRF9160](https://lemon-iot.com/index.php/product/lemon-iot-lte-cat-m1-nb-iot-nrf9160-board/) + RFM95W (SX1276) 
 
 # LoRaWAN
 
