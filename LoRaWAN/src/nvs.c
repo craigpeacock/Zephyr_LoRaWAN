@@ -37,7 +37,7 @@ void stm32wl_ieee_64uid(uint8_t dev_eui[])
 		dev_eui[i] = dev_eui_str[7-i];
 }
 
-void nvs_init(struct nvs_fs *fs)
+void nvs_initialise(struct nvs_fs *fs)
 {
 	struct flash_pages_info info;
 	int ret;

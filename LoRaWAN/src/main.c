@@ -73,7 +73,7 @@ void main(void)
 
 	printk("Zephyr LoRaWAN Node Example\nBoard: %s\n", CONFIG_BOARD);
 
-	nvs_init(&fs);
+	nvs_initialise(&fs);
 	nvs_read_init_parameter(&fs, NVS_DEVNONCE_ID, &dev_nonce);
 #ifdef LORAWAN_USE_NVS 
 	nvs_read_init_parameter(&fs, NVS_LORAWAN_DEV_EUI_ID, dev_eui);
