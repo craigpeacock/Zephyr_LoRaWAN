@@ -151,6 +151,14 @@ void main(void)
 
 	} while (ret != 0);
 
+#ifdef LORAWAN_CLASS_C
+	printk("Setting device to Class C\n");
+	ret = lorawan_set_class(LORAWAN_CLASS_C);
+	if (ret != 0) {
+		printk("Failed to set LoRaWAN class: %d\n", ret);
+	}
+#endif
+
 	while (1) {
 
 		shtc3_wakeup(i2c_dev);
