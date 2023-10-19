@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <zephyr/device.h>
 #include <zephyr/kernel.h>
-#include <zephyr/random/rand32.h>
+#include <zephyr/random/random.h>
 #include <zephyr/console/console.h>
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
