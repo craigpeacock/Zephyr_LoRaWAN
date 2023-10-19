@@ -28,7 +28,7 @@
 
 #define LOG_LEVEL CONFIG_LOG_DBG_LEVEL
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(lorawan_class_a);
+LOG_MODULE_REGISTER(main);
 
 static void dl_callback(uint8_t port, bool data_pending, int16_t rssi, int8_t snr, uint8_t len, const uint8_t *data)
 {
@@ -71,7 +71,7 @@ int main(void)
 	int ret;
 	ssize_t bytes_written;
 
-	printk("Zephyr LoRaWAN Node Example\nBoard: %s\n", CONFIG_BOARD);
+	LOG_INF("Zephyr LoRaWAN Node Example, Board: %s", CONFIG_BOARD);
 
 	nvs_initialise(&fs);
 	nvs_read_init_parameter(&fs, NVS_DEVNONCE_ID, &dev_nonce);
@@ -83,7 +83,7 @@ int main(void)
 
 	i2c_dev = DEVICE_DT_GET(DT_ALIAS(sensorbus));
 	if (!i2c_dev) {
-		printk("I2C: Device driver not found.\n");
+		LOG_ERR("I2C: Device driver not found.");
 		return(-1);
 	} else {
 		//i2c_configure(i2c_dev, I2C_SPEED_SET(I2C_SPEED_STANDARD));
@@ -91,14 +91,14 @@ int main(void)
 
 	lora_dev = DEVICE_DT_GET(DT_ALIAS(lora0));
 	if (!device_is_ready(lora_dev)) {
-		printk("%s: device not ready.", lora_dev->name);
+		LOG_ERR("%s: device not ready.", lora_dev->name);
 		return(-1);
 	}
 
-	printk("Starting LoRaWAN stack.\n");
+	LOG_INF("Starting LoRaWAN stack.");
 	ret = lorawan_start();
 	if (ret < 0) {
-		printk("lorawan_start failed: %d\n\n", ret);
+		LOG_ERR("lorawan_start failed: %d", ret);
 		return(-1);
 	}
 
@@ -121,16 +121,16 @@ int main(void)
 	int i = 1;
 
 	do {
-		printk("Joining network using OTAA, dev nonce %d, attempt %d: ", join_cfg.otaa.dev_nonce, i++);
+		LOG_INF("Joining network using OTAA, dev nonce %d, attempt %d", join_cfg.otaa.dev_nonce, i++);
 		ret = lorawan_join(&join_cfg);
 		if (ret < 0) {
 			if ((ret =-ETIMEDOUT)) {
-				printf("Timed-out waiting for response.\n");
+				LOG_WRN("Timed-out waiting for response.");
 			} else {
-				printk("Join failed (%d)\n", ret);
+				LOG_ERR("Join failed (%d)", ret);
 			}
 		} else {
-			printk("Join successful.\n");
+			LOG_INF("Join successful.");
 		}
 
 		// Increment DevNonce as per LoRaWAN 1.0.4 Spec.
@@ -139,9 +139,9 @@ int main(void)
 		// Save value away in Non-Volatile Storage.
 		bytes_written = nvs_write(&fs, NVS_DEVNONCE_ID, &dev_nonce, sizeof(dev_nonce));
 		if (bytes_written < 0) {
-			printf("NVS: Failed to write id %d (%d)\n", NVS_DEVNONCE_ID, bytes_written);
+			LOG_ERR("NVS: Failed to write id %d (%d)", NVS_DEVNONCE_ID, bytes_written);
 		} else {
-			//printf("NVS: Wrote %d bytes to id %d\n",bytes_written, NVS_DEVNONCE_ID);
+			//LOG_INF("NVS: Wrote %d bytes to id %d",bytes_written, NVS_DEVNONCE_ID);
 		}
 
 		if (ret < 0) {
@@ -152,10 +152,10 @@ int main(void)
 	} while (ret != 0);
 
 #ifdef LORAWAN_CLASS_C
-	printk("Setting device to Class C\n");
+	LOG_INF("Setting device to Class C");
 	ret = lorawan_set_class(LORAWAN_CLASS_C);
 	if (ret != 0) {
-		printk("Failed to set LoRaWAN class: %d\n", ret);
+		LOG_ERR("Failed to set LoRaWAN class: %d", ret);
 	}
 #endif
 
@@ -169,7 +169,7 @@ int main(void)
 			payload[1] = 0x0000;
 		}
 		shtc3_sleep(i2c_dev);
-		printk("Sending Temp %.02f RH %.01f\r\n", shtc3_convert_temp(payload[0]), shtc3_convert_humd(payload[1])); 
+		LOG_INF("Sending Temp %.02f RH %.01f", shtc3_convert_temp(payload[0]), shtc3_convert_humd(payload[1])); 
 	
 		ret = lorawan_send(2, (uint8_t *)&payload, sizeof(payload), LORAWAN_MSG_UNCONFIRMED);
 		if (ret == -EAGAIN) {
@@ -181,7 +181,7 @@ int main(void)
 			return(-1);
 		}
 
-		LOG_INF("Data sent!");
+		LOG_INF("Data sent");
 		k_sleep(DELAY);
 	}
 }
