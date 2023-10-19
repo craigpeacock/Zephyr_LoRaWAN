@@ -123,9 +123,9 @@ int main(void)
 	 * below with the time correction (in GPS Time).
 	 * 
 	 * <inf> main: Port 202, Pending 0, RSSI -66dB, SNR 8dBm
-     * <inf> main: Payload:
-	 *              01 77 7b 5b 52 00                                |.w{[R.
-     * <dbg> lorawan_clock_sync: clock_sync_package_callback: AppTimeAns time_correction 1381727095 (token 0)
+	 * <inf> main: Payload:
+	 *			   01 77 7b 5b 52 00                                |.w{[R.
+	 * <dbg> lorawan_clock_sync: clock_sync_package_callback: AppTimeAns time_correction 1381727095 (token 0)
 	 */
 
 	lorawan_clock_sync_run();
@@ -150,7 +150,7 @@ int main(void)
 			 * of a fudge as it doesn't take into account leap seconds and 
 			 * hence is out by roughly 18 seconds. 
 			 *
-			 */			
+			 */
 			unix_time = gps_time - 315964800;
 			localtime_r(&unix_time, &timeinfo);
 			strftime(buf, sizeof(buf), "%A %B %d %Y %I:%M:%S %p %Z", &timeinfo);
