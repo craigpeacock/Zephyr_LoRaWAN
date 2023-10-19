@@ -46,7 +46,7 @@ static void lorwan_datarate_changed(enum lorawan_datarate dr)
 	LOG_INF("New Datarate: DR_%d, Max Payload %d", dr, max_size);
 }
 
-void main(void)
+int main(void)
 {
 	const struct device *lora_dev;
 	const struct device *i2c_dev;
@@ -84,7 +84,7 @@ void main(void)
 	i2c_dev = DEVICE_DT_GET(DT_ALIAS(sensorbus));
 	if (!i2c_dev) {
 		printk("I2C: Device driver not found.\n");
-		return;
+		return(-1);
 	} else {
 		//i2c_configure(i2c_dev, I2C_SPEED_SET(I2C_SPEED_STANDARD));
 	}
@@ -92,14 +92,14 @@ void main(void)
 	lora_dev = DEVICE_DT_GET(DT_ALIAS(lora0));
 	if (!device_is_ready(lora_dev)) {
 		printk("%s: device not ready.", lora_dev->name);
-		return;
+		return(-1);
 	}
 
 	printk("Starting LoRaWAN stack.\n");
 	ret = lorawan_start();
 	if (ret < 0) {
 		printk("lorawan_start failed: %d\n\n", ret);
-		return;
+		return(-1);
 	}
 
 	// Enable callbacks
@@ -178,7 +178,7 @@ void main(void)
 			continue;
 		} else if (ret < 0) {
 			LOG_ERR("lorawan_send failed: %d", ret);
-			return;
+			return(-1);
 		}
 
 		LOG_INF("Data sent!");
